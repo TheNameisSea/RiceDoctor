@@ -20,7 +20,6 @@ import gc
 import cv2
 from PIL import Image
 import glob
-import matplotlib.pyplot as plt
 gc.enable()
 pd.set_option('display.max_columns', None)
 
@@ -239,12 +238,8 @@ if uploaded_files is not None:
         label_col = test_df['label'].copy()
         test_df['label'] = test_df['label'].map(id2label)
 
-        y = test_df['label'].value_counts()
-        y_label = test_df['label'].unique()
-
         with res_col:
             st.write(test_df)
-            st.pyplot(plt.pie(y, labels = y_label))
             for i in label_col.unique():
                 if i == 0:
                     st.write("https://vaas.vn/kienthuc/Caylua/06/14_benhbachla.htm")
