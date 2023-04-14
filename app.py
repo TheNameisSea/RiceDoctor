@@ -170,7 +170,7 @@ st.set_page_config(page_title="Rice Disease Classification", page_icon="🔬", l
 # Page Title
 luu_y = [
     'Sản phẩm chỉ sử dụng được cho lúa, xin vui lòng không nhập ảnh của các vật khác vào app',
-    'Tất cả các dự đoán dựa trên ảnh của các vật ngoài lúa đều không đáng tin',
+    'Nhà phát triển không đảm bảo độ chính xác của dự đoán cho tất cả các dự đoán dựa trên ảnh của các giống cây ngoài lúa',
     'Chỉ có tác dụng với ảnh chụp từ điện thoại (tỉ lệ 4:3, độ phân giải 1440x1080)'
 ]
 
