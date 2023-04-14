@@ -178,9 +178,8 @@ st.write("""
 # Bác Sĩ Lúa
 Chẩn đoán bệnh lúa dựa trên hình ảnh 
 """)
-st.write(
-    '[Lưu ý:]\n' + luu_y 
-)
+st.write('[Lưu ý:]')
+st.write(luu_y)
          
 st.sidebar.header('Tải ảnh lên để bắt đầu chẩn đoán')
 uploaded_files = st.sidebar.file_uploader("Tải ảnh", accept_multiple_files=True)
