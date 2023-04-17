@@ -82,6 +82,7 @@ suongmai = "Xử lý bệnh sương mai:\nSử dụng chế phẩm sinh học tr
 bogai = "Xử lý bọ gai\nLàm sạch cỏ dại trong ruộng và bờ bao.\nDiệt trừ sâu non trên mạ mùa sắp cấy bằng cách ngắt bỏ các lá bị hại có bọ gai.\nDùng thuốc trừ sâu nhóm lân hữu cơ, Carbamate hoặc Cúc tổng hợp đều có thể diệt được bọ gai trưởng thành và ấu trùng."
 tungro = "Xử lý virus Tungro:\nPhun các loại thuốc trừ sâu có gốc buprofezin hay pymetrozine ở thời điểm ngày thứ 15 và ngày thứ 30 sau khi cấy có thể đạt hiệu quả nếu được thực hiện đúng thời gian. Các loài cây quanh cánh đồng cũng cần được phun các loại thuốc trừ sâu nêu trên.\nKhông nên sử dụng các sản phẩm thuốc trừ sâu có gốc chlorpyriphos, lamda cyhalothrin hay các công thức kết hợp các chất pyrethroid tổng hợp vì các loài sâu rầy đã phần nào đề kháng được các loại thuốc ấy. "
 binhthuong = "Lúa không bị bệnh hoặc không bị bệnh do virus / vi khuẩn / nấm"
+
 # Params
 params = {
     'model': 'efficientnet_b3',
@@ -165,17 +166,16 @@ def load_image(image_file):
 st.set_page_config(page_title="Rice Disease Classification", page_icon="🔬", layout="centered", initial_sidebar_state="expanded", menu_items=None) 
 
 # Page Title
-luu_y = [
-    'Sản phẩm chỉ sử dụng được cho lúa, xin vui lòng không nhập ảnh của các vật khác vào app',
-    'Nhà phát triển không đảm bảo độ chính xác của dự đoán cho tất cả các dự đoán dựa trên ảnh của các giống cây ngoài lúa',
-    'Chỉ có tác dụng với ảnh chụp từ điện thoại (tỉ lệ 4:3, độ phân giải khuyến khích: 1440x1080)'
-]
-
 st.write("""
 # Bác Sĩ Lúa
 Chẩn đoán bệnh lúa dựa trên hình ảnh 
 """)
 st.write('[Lưu ý:]')
+luu_y = [
+    'Sản phẩm chỉ sử dụng được cho lúa, xin vui lòng không nhập ảnh của các vật khác vào app',
+    'Nhà phát triển không đảm bảo độ chính xác của dự đoán cho tất cả các dự đoán dựa trên ảnh của các giống cây ngoài lúa',
+    'Chỉ có tác dụng với ảnh chụp từ điện thoại (tỉ lệ 4:3, độ phân giải khuyến khích: 1440x1080)'
+]
 st.write(luu_y)
          
 st.sidebar.header('Tải ảnh lên để bắt đầu chẩn đoán')
@@ -284,10 +284,8 @@ if uploaded_files is not None:
 
         test_df.to_csv('./output/submission.csv', index=False)
 
-
-
     except:
-        pass
+        raise Exception("Đã có lỗi xảy ra, xin vui lòng thử lại sau.")
 
 
 
