@@ -38,9 +38,6 @@ import torch.nn.functional as F
 # UI
 import streamlit as st
 
-# Utils
-import tempfile
-
 # Seeds
 RANDOM_SEED = 42
 
