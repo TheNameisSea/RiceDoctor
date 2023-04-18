@@ -285,7 +285,7 @@ if uploaded_files is not None:
         test_df.to_csv('./output/submission.csv', index=False)
 
     except:
-        raise Exception("Đã có lỗi xảy ra, xin vui lòng thử lại sau.")
+        pass 
 
 
 
