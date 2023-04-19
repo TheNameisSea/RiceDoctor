@@ -181,7 +181,7 @@ st.write(luu_y)
 st.sidebar.header('Tải ảnh lên để bắt đầu chẩn đoán')
 uploaded_files = st.sidebar.file_uploader("Tải ảnh", accept_multiple_files=True)
 
-res_col, img_col = st.columns([4, 2])
+#res_col, img_col = st.columns([4, 2])
 
 if uploaded_files is not None:
     try:
@@ -260,34 +260,34 @@ if uploaded_files is not None:
         label_col = test_df['label'].copy()
         test_df['label'] = test_df['label'].map(id2label)
 
-        with res_col:
-            st.write(test_df)
-            for i in label_col.unique():
-                if i == 0:
-                    st.write(bacla)
-                elif i == 1:
-                    st.write(domsocla)
-                elif i == 2:
-                    st.write(bacchuyla)
-                elif i == 3:
-                    st.write(chaylua)
-                elif i == 4:
-                    st.write(domnau)
-                elif i == 5:
-                    st.write(sauducthanlua)
-                elif i == 6:
-                    st.write(suongmai)
-                elif i == 7:
-                    st.write(bogai)
-                elif i == 8:
-                    st.write(binhthuong)
-                elif i == 9:
-                    st.write(tungro)     
+        # with res_col:
+        st.write(test_df)
+        for i in label_col.unique():
+            if i == 0:
+                st.write(bacla)
+            elif i == 1:
+                st.write(domsocla)
+            elif i == 2:
+                st.write(bacchuyla)
+            elif i == 3:
+                st.write(chaylua)
+            elif i == 4:
+                st.write(domnau)
+            elif i == 5:
+                st.write(sauducthanlua)
+            elif i == 6:
+                st.write(suongmai)
+            elif i == 7:
+                st.write(bogai)
+            elif i == 8:
+                st.write(binhthuong)
+            elif i == 9:
+                st.write(tungro)     
 
-        with img_col:
-            for img_path in os.listdir(upload_path):
-                image = Image.open(os.path.join('./upload', img_path))
-                st.image(image, use_column_width='auto')
+        # with img_col:
+        for img_path in os.listdir(upload_path):
+            image = Image.open(os.path.join('./upload', img_path))
+            st.image(image, use_column_width='auto')
 
         test_df.to_csv('./output/submission.csv', index=False)
 
