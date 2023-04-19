@@ -287,7 +287,7 @@ if uploaded_files is not None:
         # with img_col:
         for img_path in os.listdir(upload_path):
             image = Image.open(os.path.join('./upload', img_path))
-            st.image(image, width=300)
+            st.image(image, width=200)
 
         test_df.to_csv('./output/submission.csv', index=False)
 
