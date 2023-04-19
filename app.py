@@ -190,6 +190,13 @@ if uploaded_files is not None:
         os.mkdir('./upload')
         upload_path = "./upload"
 
+        os.chdir('./database')
+        for uploaded_file in uploaded_files:
+            img = load_image(uploaded_file)
+            with open(uploaded_file.name, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+        os.chdir('../')
+
         os.chdir(upload_path)
         for uploaded_file in uploaded_files:
             img = load_image(uploaded_file)
