@@ -285,7 +285,7 @@ if uploaded_files is not None:
                     st.write(tungro)     
 
         with img_col:
-            for img_path in os.listdir(upload_path):
+            for img_path in os.listdir(upload_path)[:2]:
                 image = Image.open(os.path.join('./upload', img_path))
                 st.image(image, use_column_width='auto')
 
