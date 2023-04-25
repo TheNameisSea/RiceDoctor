@@ -70,7 +70,8 @@ id2label = {0: 'Bạc lá',
             6: 'Sương mai',
             7: 'Bọ gai',
             8: 'Bình thường',
-            9: 'Vi-rút Tungro'}
+            9: 'Vi-rút Tungro',
+            10: 'Không xác định'}
 
 bacla = "Xử lý bệnh bạc lá:\n Sử dụng các thuốc trong danh mục thuốc BVTV được phép sử dụng ở Việt Nam có chứa các hoạt chất Bismerthiazol, Copper hydroxide, Oxolinic acid, Thiodiazole zinc, Thiodiazole copper,… để phun.\nGiai đoạn lúa đòng – trổ – chín, bà con cần theo dõi chặt chẽ diễn biến của thời tiết tiến hành phun trước và sau mưa giông bằng các thuốc bảo vệ thực vật có chứa hoạt chất nêu trên theo nguyên tắc 4 đúng và theo hướng dẫn sử dụng trên bao bì để ngăn chặn bệnh lây lan trên diện rộng."
 domsocla = "Xử lý bệnh đốm sọc lá:\nKhông bón quá nhiều đạm, bón đạm muộn và kéo dài; Chú ý kết hợp giữa bón đạm với phân chuồng, lân, kali.\nKhi phát hiện thấy ruộng chớm bị bệnh cần giữ mực nước từ 3 - 5 cm, tuyệt đối không được bón các loại phân hóa học, phân bón qua lá và thuốc kích thích sinh trưởng.\n Sử dụng các loại thuốc hoá học để phun phòng trừ như: Totan 200WP, Starwiner 20WP, Novaba 68WP, Xanthomix 20WP, PN - Balacide 32 WP, Starner 20 WP,... pha và phun theo hướng dẫn trên vỏ bao bì." 
@@ -245,8 +246,12 @@ if uploaded_files is not None:
             with torch.no_grad():
                 for images in test_loader:
                     images = images.to(params['device'], non_blocking=True)
-                    predictions = model(images).softmax(dim=1).argmax(dim=1).to('cpu').numpy()      # apply softmax and find the highest possibility
-                    
+                    predictions = model(images).softmax(dim=1)      # apply softmax
+                    if max(predictions) < 0.5:
+                        predictions = 10
+                    else:
+                        predictions = predictions.argmax(dim=1).to('cpu').numpy()
+
                     if temp_preds is None:
                         temp_preds = predictions
                     else:
@@ -282,7 +287,9 @@ if uploaded_files is not None:
                 elif i == 8:
                     st.write(binhthuong)
                 elif i == 9:
-                    st.write(tungro)     
+                    st.write(tungro)  
+                elif i == 10:
+                    st.write('Ảnh không xác định (Không phải ảnh lúa / chất lượng ảnh không phù hợp)')   
 
         with img_col:
             for img_path in os.listdir(upload_path)[:2]:
