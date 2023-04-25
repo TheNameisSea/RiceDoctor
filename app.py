@@ -248,6 +248,7 @@ if uploaded_files is not None:
                     images = images.to(params['device'], non_blocking=True)
                     predictions = model(images).softmax(dim=1)     # apply softmax
                     predictions = predictions.argmax(dim=1).to('cpu').numpy()
+                    print(predictions)
                     # if max(predictions) < 0.25:
                     #     predictions = 10
                     #     predictions = predictions.to('cpu').numpy()
