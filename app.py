@@ -246,7 +246,8 @@ if uploaded_files is not None:
             with torch.no_grad():
                 for images in test_loader:
                     images = images.to(params['device'], non_blocking=True)
-                    predictions = model(images).softmax(dim=1).argmax(dim=1).to('cpu').numpy()     # apply softmax
+                    predictions = model(images).softmax(dim=1)     # apply softmax
+                    predictions = predictions.argmax(dim=1).to('cpu').numpy()
                     # if max(predictions) < 0.25:
                     #     predictions = 10
                     #     predictions = predictions.to('cpu').numpy()
