@@ -93,7 +93,7 @@ params = {
     'device': device,
     'batch_size': 85,
     'num_workers' : 0,
-    'out_features': 10,
+    'out_features': 11,
     'dropout': 0.2,
     'num_fold': 10,
     'debug': False,
