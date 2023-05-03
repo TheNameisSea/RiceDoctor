@@ -244,10 +244,10 @@ if uploaded_files is not None:
 
             temp_preds = None
             with torch.no_grad():
-                for images in test_loader:
+                for images in tqdm(test_loader, desc=f'Predicting. '):
                     images = images.to(params['device'], non_blocking=True)
-                    predictions = model(images).softmax(dim=1).argmax(dim=1).to('cpu').numpy()   # apply softmax
-
+                    predictions = model(images).softmax(dim=1).argmax(dim=1).to('cpu').numpy()
+                    
                     if temp_preds is None:
                         temp_preds = predictions
                     else:
