@@ -59,6 +59,7 @@ device = torch.device('cpu')
 # required datafile
 data_dir = './input'        # image folder
 models_dir = './models'     # model folder
+test_df = pd.DataFrame()
 
 id2label = {0: 'Bạc lá',
             1: 'Đốm sọc lá',
