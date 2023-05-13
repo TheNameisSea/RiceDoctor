@@ -20,8 +20,6 @@ import gc
 import cv2
 from PIL import Image
 import glob
-import json
-import random
 gc.enable()
 pd.set_option('display.max_columns', None)
 
@@ -36,10 +34,6 @@ import torchvision
 import timm
 import torch.nn as nn
 import torch.nn.functional as F
-import nltk 
-from nltk.stem.lancaster import LancasterStemmer
-import tflearn
-import tensorflow
 
 # UI
 import streamlit as st
@@ -65,11 +59,6 @@ device = torch.device('cpu')
 # required datafile
 data_dir = './input'        # image folder
 models_dir = './models'     # model folder
-chat_dir = './chatbot_model'    # chatbot model
-# chatbot data
-with open('./intents.json') as file:    
-    data = json.load(file)
-test_df = pd.DataFrame(columns=['image_id', 'label'])
 
 id2label = {0: 'Bạc lá',
             1: 'Đốm sọc lá',
@@ -108,40 +97,6 @@ params = {
     'num_fold': 10,
     'debug': False,
 }
-
-# NLP
-stemmer = LancasterStemmer()
-words = []
-labels = []
-docs_x = []
-docs_y = []
-
-for intent in data["intents"]:
-    for pattern in intent["patterns"]:
-        wrds = nltk.word_tokenize(pattern)
-        words.extend(wrds)
-        docs_x.append(wrds)
-        docs_y.append(intent["tag"])
-        
-    if intent["tag"] not in labels:
-        labels.append(intent["tag"])
-
-words = [stemmer.stem(w.lower()) for w in words if w not in "?"]
-words = sorted(list(set(words)))
-labels = sorted(labels)
-
-def bag_of_words(s, words):
-    bag = [0 for _ in range(len(words))]
-    
-    s_words = nltk.word_tokenize(s)
-    s_words = [stemmer.stem(word.lower()) for word in s_words]
-    
-    for se in s_words:
-        for i, w in enumerate(words):
-            if w == se:
-                bag[i] = 1
-                
-    return np.array(bag)
 
 # Transform
 def get_test_transforms(DIM = params['im_size']):
@@ -211,173 +166,135 @@ def load_image(image_file):
 st.set_page_config(page_title="Rice Disease Classification", page_icon="🔬", layout="centered", initial_sidebar_state="expanded", menu_items=None) 
 
 # Page Title
-tab1, tab2 = st.tabs(["Chẩn đoán", "RdpChat"])
 
-with tab1:
-    st.write("""
-    # Bác Sĩ Lúa
-    Chẩn đoán bệnh lúa dựa trên hình ảnh 
-    """)
-    st.write('[Lưu ý:]')
-    luu_y = [
-        'Sản phẩm chỉ sử dụng được cho lúa, xin vui lòng không nhập ảnh của các vật khác vào app',
-        'Nhà phát triển không đảm bảo độ chính xác của dự đoán cho tất cả các dự đoán dựa trên ảnh của các giống cây ngoài lúa',
-        'Chỉ có tác dụng với ảnh chụp từ điện thoại (tỉ lệ 4:3, độ phân giải khuyến khích: 1440x1080)'
-    ]
-    st.write(luu_y)
+st.write("""
+# Bác Sĩ Lúa
+Chẩn đoán bệnh lúa dựa trên hình ảnh 
+""")
+st.write('[Lưu ý:]')
+luu_y = [
+    'Sản phẩm chỉ sử dụng được cho lúa, xin vui lòng không nhập ảnh của các vật khác vào app',
+    'Nhà phát triển không đảm bảo độ chính xác của dự đoán cho tất cả các dự đoán dựa trên ảnh của các giống cây ngoài lúa',
+    'Chỉ có tác dụng với ảnh chụp từ điện thoại (tỉ lệ 4:3, độ phân giải khuyến khích: 1440x1080)'
+]
+st.write(luu_y)
+        
+st.sidebar.header('Tải ảnh lên để bắt đầu chẩn đoán')
+uploaded_files = st.sidebar.file_uploader("Tải ảnh", accept_multiple_files=True)
+
+res_col, img_col = st.columns([4, 2])
+
+if uploaded_files is not None:
+    try:
+        if os.path.exists('./upload'):
+            shutil.rmtree('./upload')
+        os.mkdir('./upload')
+        upload_path = "./upload"
+
+        # os.chdir('./database')
+        # for uploaded_file in uploaded_files:
+        #     img = load_image(uploaded_file)
+        #     with open(uploaded_file.name, "wb") as f:
+        #         f.write(uploaded_file.getbuffer())
+        # os.chdir('../')
+
+        os.chdir(upload_path)
+        for uploaded_file in uploaded_files:
+            img = load_image(uploaded_file)
+            with open(uploaded_file.name, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+        os.chdir('../')
+
+        image_ids = os.listdir(upload_path)      # take name of all uploaded file
+        if '.DS_Store' in image_ids:
+            image_ids.remove('.DS_Store')
+        # folder_len = len(image_ids)     # Take number of uploaded file
+
+        # test_df = test_df[(test_df.index < folder_len)]     # remove images that could cause overflow
+        test_df['image_id'] = image_ids     # add name of uploaded file to template
+        paths = test_df.apply(lambda row: './upload/' + row['image_id'], axis=1)
+        paths = paths.to_numpy()
+        test_df['image_path'] = paths    # create filepaths
+
+
+
+        # Prediction
+        pred_cols = []
+
+        for i, model_name in enumerate(glob.glob(models_dir + '/*.pth')):
+            model = PaddyNet()
+            model.load_state_dict(torch.load(model_name, map_location=torch.device('cpu')))     # load model
+            model = model.to(params['device'])
+            model.eval()        # evaluate model for uses
             
-    st.sidebar.header('Tải ảnh lên để bắt đầu chẩn đoán')
-    uploaded_files = st.sidebar.file_uploader("Tải ảnh", accept_multiple_files=True)
+            X_test = test_df['image_path']      # read filepaths
 
-    res_col, img_col = st.columns([4, 2])
+            # create a dataset of images and apply augmentation to the images
+            test_dataset = PaddyDataset(
+                images_filepaths=X_test.values,     
+                transform = get_test_transforms()
+            )
+            
+            # data loader is used to load data
+            test_loader = DataLoader(
+                test_dataset, batch_size=params['batch_size'],
+                shuffle=False, num_workers=params['num_workers'],
+                pin_memory=True
+            )
 
-    if uploaded_files is not None:
-        try:
-            if os.path.exists('./upload'):
-                shutil.rmtree('./upload')
-            os.mkdir('./upload')
-            upload_path = "./upload"
+            temp_preds = None
+            with torch.no_grad():
+                for images in test_loader:
+                    images = images.to(params['device'], non_blocking=True)
+                    predictions = model(images).softmax(dim=1).argmax(dim=1).to('cpu').numpy()
+                    
+                    if temp_preds is None:
+                        temp_preds = predictions
+                    else:
+                        temp_preds = np.hstack((temp_preds, predictions))
 
-            # os.chdir('./database')
-            # for uploaded_file in uploaded_files:
-            #     img = load_image(uploaded_file)
-            #     with open(uploaded_file.name, "wb") as f:
-            #         f.write(uploaded_file.getbuffer())
-            # os.chdir('../')
+            test_df[f'model_{i}_preds'] = temp_preds
+            pred_cols.append(f'model_{i}_preds')
 
-            os.chdir(upload_path)
-            for uploaded_file in uploaded_files:
-                img = load_image(uploaded_file)
-                with open(uploaded_file.name, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
-            os.chdir('../')
+        test_df['label'] = test_df[pred_cols].mode(axis=1)[0]
+        test_df = test_df[['image_id', 'label']]
+        label_col = test_df['label'].copy()
+        test_df['label'] = test_df['label'].map(id2label)
 
-            image_ids = os.listdir(upload_path)      # take name of all uploaded file
-            if '.DS_Store' in image_ids:
-                image_ids.remove('.DS_Store')
-            # folder_len = len(image_ids)     # Take number of uploaded file
+        with res_col:
+            st.write(test_df)
+            for i in label_col.unique():
+                if i == 0:
+                    st.write(bacla)
+                elif i == 1:
+                    st.write(domsocla)
+                elif i == 2:
+                    st.write(bacchuyla)
+                elif i == 3:
+                    st.write(chaylua)
+                elif i == 4:
+                    st.write(domnau)
+                elif i == 5:
+                    st.write(sauducthanlua)
+                elif i == 6:
+                    st.write(suongmai)
+                elif i == 7:
+                    st.write(bogai)
+                elif i == 8:
+                    st.write(binhthuong)
+                elif i == 9:
+                    st.write(tungro)  
+                elif i == 10:
+                    st.write('Ảnh không xác định (Không phải ảnh lúa / chất lượng ảnh không phù hợp)')   
 
-            # test_df = test_df[(test_df.index < folder_len)]     # remove images that could cause overflow
-            test_df['image_id'] = image_ids     # add name of uploaded file to template
-            paths = test_df.apply(lambda row: './upload/' + row['image_id'], axis=1)
-            paths = paths.to_numpy()
-            test_df['image_path'] = paths    # create filepaths
+        with img_col:
+            for img_path in os.listdir(upload_path)[:2]:
+                image = Image.open(os.path.join('./upload', img_path))
+                st.image(image, use_column_width='auto')
 
+    except:
+        pass
 
-
-            # Prediction
-            pred_cols = []
-
-            for i, model_name in enumerate(glob.glob(models_dir + '/*.pth')):
-                model = PaddyNet()
-                model.load_state_dict(torch.load(model_name, map_location=torch.device('cpu')))     # load model
-                model = model.to(params['device'])
-                model.eval()        # evaluate model for uses
-                
-                X_test = test_df['image_path']      # read filepaths
-
-                # create a dataset of images and apply augmentation to the images
-                test_dataset = PaddyDataset(
-                    images_filepaths=X_test.values,     
-                    transform = get_test_transforms()
-                )
-                
-                # data loader is used to load data
-                test_loader = DataLoader(
-                    test_dataset, batch_size=params['batch_size'],
-                    shuffle=False, num_workers=params['num_workers'],
-                    pin_memory=True
-                )
-
-                temp_preds = None
-                with torch.no_grad():
-                    for images in test_loader:
-                        images = images.to(params['device'], non_blocking=True)
-                        predictions = model(images).softmax(dim=1).argmax(dim=1).to('cpu').numpy()
-                        
-                        if temp_preds is None:
-                            temp_preds = predictions
-                        else:
-                            temp_preds = np.hstack((temp_preds, predictions))
-
-                test_df[f'model_{i}_preds'] = temp_preds
-                pred_cols.append(f'model_{i}_preds')
-
-            test_df['label'] = test_df[pred_cols].mode(axis=1)[0]
-            test_df = test_df[['image_id', 'label']]
-            label_col = test_df['label'].copy()
-            test_df['label'] = test_df['label'].map(id2label)
-
-            with res_col:
-                st.write(test_df)
-                for i in label_col.unique():
-                    if i == 0:
-                        st.write(bacla)
-                    elif i == 1:
-                        st.write(domsocla)
-                    elif i == 2:
-                        st.write(bacchuyla)
-                    elif i == 3:
-                        st.write(chaylua)
-                    elif i == 4:
-                        st.write(domnau)
-                    elif i == 5:
-                        st.write(sauducthanlua)
-                    elif i == 6:
-                        st.write(suongmai)
-                    elif i == 7:
-                        st.write(bogai)
-                    elif i == 8:
-                        st.write(binhthuong)
-                    elif i == 9:
-                        st.write(tungro)  
-                    elif i == 10:
-                        st.write('Ảnh không xác định (Không phải ảnh lúa / chất lượng ảnh không phù hợp)')   
-
-            with img_col:
-                for img_path in os.listdir(upload_path)[:2]:
-                    image = Image.open(os.path.join('./upload', img_path))
-                    st.image(image, use_column_width='auto')
-
-        except:
-            pass
-
-with tab2:
-    st.write("""
-    # RdpChat
-    Chuyên gia về bệnh lúa
-    """)
-    st.write('[Giới thiệu:]')
-    intro = [
-        'RdpChat là một AI chatbot được tạo ra để hỗ trợ người nông dân về các kiến thức về bệnh lúa',
-        'Chức năng đang trong gia đoạn thử nghiệm',
-        'Chỉ có thể trả lời các câu hỏi liên quan đến bệnh lúa'
-        ]
-    st.write(intro)
-
-    inp = st.st.text_area()
-
-    model = tflearn.DNN()
-    model.load("./chatbot_model/model.tflearn")
-    
-    if inp is not None:
-        try:
-            results = model.predict([bag_of_words(inp, words)])[0]
-            results_index = np.argmax(results)
-            tag = labels[results_index]
-
-            if results[results_index] > 0.5:
-                for tg in data["intents"]:
-                    if tg['tag'] == tag:
-                        responses = tg['responses:']
-
-                st.write(random.choice(responses))
-        
-            else:
-                st.write("Tôi không hiểu câu hỏi, hãy thử hỏi câu hỏi khác")
-        
-        except:
-            pass
 
     
 

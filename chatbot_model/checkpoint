@@ -1,2 +1,0 @@
-model_checkpoint_path: "/kaggle/working/saved_model/model.tflearn"
-all_model_checkpoint_paths: "/kaggle/working/saved_model/model.tflearn"
