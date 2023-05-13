@@ -20,8 +20,8 @@ import gc
 import cv2
 from PIL import Image
 import glob
+import json
 import random
-import json 
 gc.enable()
 pd.set_option('display.max_columns', None)
 
@@ -36,14 +36,13 @@ import torchvision
 import timm
 import torch.nn as nn
 import torch.nn.functional as F
-from model import NeuralNet
-from nltk_utils import bag_of_words, tokenize
+import nltk 
+from nltk.stem.lancaster import LancasterStemmer
+import tflearn
+import tensorflow
 
 # UI
 import streamlit as st
-from streamlit_chat import message
-from streamlit_extras.colored_header import colored_header
-from streamlit_extras.add_vertical_space import add_vertical_space
 
 # Seeds
 RANDOM_SEED = 42
@@ -66,6 +65,10 @@ device = torch.device('cpu')
 # required datafile
 data_dir = './input'        # image folder
 models_dir = './models'     # model folder
+chat_dir = './chatbot_model'    # chatbot model
+# chatbot data
+with open('./intents.json') as file:    
+    data = json.load(file)
 test_df = pd.DataFrame(columns=['image_id', 'label'])
 
 id2label = {0: 'Bạc lá',
@@ -80,14 +83,16 @@ id2label = {0: 'Bạc lá',
             9: 'Vi-rút Tungro',
             10: 'Không xác định'}
 
-with open('./chat/intents.json', 'r') as json_data:
-    intents = json.load(json_data)
-
-with open('./info.json', 'r') as diseases_info:
-    info = json.load(diseases_info)
-
-chat_file = "./chat/chatbot_data.pth"
-chatbot_data = torch.load(chat_file)
+bacla = "Xử lý bệnh bạc lá:\n Sử dụng các thuốc trong danh mục thuốc BVTV được phép sử dụng ở Việt Nam có chứa các hoạt chất Bismerthiazol, Copper hydroxide, Oxolinic acid, Thiodiazole zinc, Thiodiazole copper,… để phun.\nGiai đoạn lúa đòng – trổ – chín, bà con cần theo dõi chặt chẽ diễn biến của thời tiết tiến hành phun trước và sau mưa giông bằng các thuốc bảo vệ thực vật có chứa hoạt chất nêu trên theo nguyên tắc 4 đúng và theo hướng dẫn sử dụng trên bao bì để ngăn chặn bệnh lây lan trên diện rộng."
+domsocla = "Xử lý bệnh đốm sọc lá:\nKhông bón quá nhiều đạm, bón đạm muộn và kéo dài; Chú ý kết hợp giữa bón đạm với phân chuồng, lân, kali.\nKhi phát hiện thấy ruộng chớm bị bệnh cần giữ mực nước từ 3 - 5 cm, tuyệt đối không được bón các loại phân hóa học, phân bón qua lá và thuốc kích thích sinh trưởng.\n Sử dụng các loại thuốc hoá học để phun phòng trừ như: Totan 200WP, Starwiner 20WP, Novaba 68WP, Xanthomix 20WP, PN - Balacide 32 WP, Starner 20 WP,... pha và phun theo hướng dẫn trên vỏ bao bì." 
+bacchuyla = "Xử lý bệnh bạc chuỳ lá:\nChọn giống lúa ít nhiễm bệnh, làm đất kỹ, giải độc hữu cơ, sạ thưa, bón phân cân đối NPK, bón đầy đủ canxi, silic, kali, không để nước ngập sâu kéo dài.\n Vào giai đoạn cuối đẻ nhánh, nuôi đòng nếu xuất hiện bệnh Cháy bìa lá do vi khuẩn có thể sử dụng Agrilife 100SL với liều 30ml/25 lít.\nVào giai đoạn lúa trổ đến chín: phun thuốc 25ml Agrilife 100SL +25ml Keviar 325SC/25 lít 2 lần: lúc lúa trổ lẹt xẹt và lúc lúa trổ đều."
+chaylua = "Xử lý bệnh cháy lúa:\nTrước khi trồng vụ mới thì tiến hành cải tạo và vệ sinh sạch đồng ruộng để tránh mầm khuẩn gây bệnh.\nBón phân cân đối dựa trên màu lá lúa, chú ý giữ mực nước trong ruộng thích hợp từ 5-10cm so với cây lúa.\nKhi mới phát hiện bệnh, nên rút nước trong ruộng ra rồi tiến hành rải vôi với liều lượng 10 – 20kg/1.000m2.\nSử dụng thuốc đặc trị bệnh cháy lá lúa khi cần thiết, sử dụng theo hướng dẫn của nhà sản xuất trên bao bì."
+domnau = "Xử lý bệnh đốm nâu:\nXử lý giống trước khi gieo bằng nước nóng 54 độ C hoặc bằng cách dùng một trong các loại thuốc trừ bệnh như Carban 50SC, Vicarben 50HP... pha nồng độ 3/1.000 ngâm giống 24-36 giờ sau đó vớt ra đãi sạch rồi đem ủ bình thường.\nSử dụng một trong các loại thuốc như: Kacie 250EC, Golcol 20SL, Supercin 20EC/40EC/80EC, Carbenzim 500FL, Tilt Super 300EC, Viroval 50BTN, Workup 9SL... để phun xịt. Về liều lượng và cách sử dụng nên đọc kỹ hướng dẫn của nhà sản xuất có in sẵn trên bao bì."
+sauducthanlua = "Xử lý bệnh sâu đục thân lúa:\n Sử dụng sản phẩm TT Checker 270SC, liều lượng 40ml/bình 25L.\nBổ sung thêm cho cây lúa chất điều hòa sinh trưởng như Plastimula 1SL với liều lượng 30ml/bình 25L ở các thời kỳ quan trọng như: xử lý giống, đẻ nhánh, làm đòng."
+suongmai = "Xử lý bệnh sương mai:\nSử dụng chế phẩm sinh học trừ bệnh RV04 với cơ chế tác động kép của nấm đối kháng và Enzyme kích kháng cây trồng tiêu diệt, cô lập các vết bệnh do nấm và vi khuẩn tấn công, ngăn chặn kịp thời sự lây lan của mầm bệnh.\nDựa vào điều kiện thời tiết mà nên tham khảo sử dụng để phòng bệnh từ đầu."
+bogai = "Xử lý bọ gai\nLàm sạch cỏ dại trong ruộng và bờ bao.\nDiệt trừ sâu non trên mạ mùa sắp cấy bằng cách ngắt bỏ các lá bị hại có bọ gai.\nDùng thuốc trừ sâu nhóm lân hữu cơ, Carbamate hoặc Cúc tổng hợp đều có thể diệt được bọ gai trưởng thành và ấu trùng."
+tungro = "Xử lý virus Tungro:\nPhun các loại thuốc trừ sâu có gốc buprofezin hay pymetrozine ở thời điểm ngày thứ 15 và ngày thứ 30 sau khi cấy có thể đạt hiệu quả nếu được thực hiện đúng thời gian. Các loài cây quanh cánh đồng cũng cần được phun các loại thuốc trừ sâu nêu trên.\nKhông nên sử dụng các sản phẩm thuốc trừ sâu có gốc chlorpyriphos, lamda cyhalothrin hay các công thức kết hợp các chất pyrethroid tổng hợp vì các loài sâu rầy đã phần nào đề kháng được các loại thuốc ấy. "
+binhthuong = "Lúa không bị bệnh hoặc không bị bệnh do virus / vi khuẩn / nấm"
 
 # Params
 params = {
@@ -103,6 +108,40 @@ params = {
     'num_fold': 10,
     'debug': False,
 }
+
+# NLP
+stemmer = LancasterStemmer()
+words = []
+labels = []
+docs_x = []
+docs_y = []
+
+for intent in data["intents"]:
+    for pattern in intent["patterns"]:
+        wrds = nltk.word_tokenize(pattern)
+        words.extend(wrds)
+        docs_x.append(wrds)
+        docs_y.append(intent["tag"])
+        
+    if intent["tag"] not in labels:
+        labels.append(intent["tag"])
+
+words = [stemmer.stem(w.lower()) for w in words if w not in "?"]
+words = sorted(list(set(words)))
+labels = sorted(labels)
+
+def bag_of_words(s, words):
+    bag = [0 for _ in range(len(words))]
+    
+    s_words = nltk.word_tokenize(s)
+    s_words = [stemmer.stem(word.lower()) for word in s_words]
+    
+    for se in s_words:
+        for i, w in enumerate(words):
+            if w == se:
+                bag[i] = 1
+                
+    return np.array(bag)
 
 # Transform
 def get_test_transforms(DIM = params['im_size']):
@@ -137,7 +176,7 @@ class PaddyDataset(Dataset):
         return image
 
 #_____Deep Learning_____#
-# PaddyNet
+# Neural Net
 class PaddyNet(nn.Module):
     def __init__(self, model_name=params['model'], out_features=params['out_features'], inp_channels=params['inp_channels'],
                  pretrained=params['pretrained']):
@@ -162,43 +201,7 @@ class PaddyNet(nn.Module):
         output = self.fc(x)
         return output
     
-# Chatbot
-all_words = chatbot_data['all_words']
-tags = chatbot_data['tags']
-model_state = chatbot_data["model_state"]
-
-chat_model = NeuralNet(input_size=chatbot_data["input_size"], hidden_size=chatbot_data["hidden_size"], num_classes=chatbot_data["output_size"]).to(device)
-chat_model.load_state_dict(model_state)
-chat_model.eval()
-
 # Utils
-def get_text():
-    input_text = st.text_input("You: ", "", key="input")
-    return input_text
-
-def generate_response(msg):
-    response = "Xin lỗi, tôi không hiểu câu hỏi."
-
-    sentence = tokenize(msg)
-    X = bag_of_words(sentence, all_words)
-    X = X.reshape(1, X.shape[0])
-    X = torch.from_numpy(X).to(device)
-
-    output = chat_model(X)
-    _, predicted = torch.max(output, dim=1)
-
-    tag = tags[predicted.item()]
-
-    probs = torch.softmax(output, dim=1)
-    prob = probs[0][predicted.item()]
-    if prob.item() > 0.75:
-        for intent in intents['intents']:
-            if tag == intent["tag"]:
-                response = random.choice(intent['responses'])
-                return response
-    
-    return response
-
 @st.cache_data
 def load_image(image_file):
     img = Image.open(image_file)
@@ -308,7 +311,28 @@ with tab1:
             with res_col:
                 st.write(test_df)
                 for i in label_col.unique():
-                        st.write(info["sol"][i])   
+                    if i == 0:
+                        st.write(bacla)
+                    elif i == 1:
+                        st.write(domsocla)
+                    elif i == 2:
+                        st.write(bacchuyla)
+                    elif i == 3:
+                        st.write(chaylua)
+                    elif i == 4:
+                        st.write(domnau)
+                    elif i == 5:
+                        st.write(sauducthanlua)
+                    elif i == 6:
+                        st.write(suongmai)
+                    elif i == 7:
+                        st.write(bogai)
+                    elif i == 8:
+                        st.write(binhthuong)
+                    elif i == 9:
+                        st.write(tungro)  
+                    elif i == 10:
+                        st.write('Ảnh không xác định (Không phải ảnh lúa / chất lượng ảnh không phù hợp)')   
 
             with img_col:
                 for img_path in os.listdir(upload_path)[:2]:
@@ -325,35 +349,36 @@ with tab2:
     """)
     st.write('[Giới thiệu:]')
     intro = [
+        'RdpChat là một AI chatbot được tạo ra để hỗ trợ người nông dân về các kiến thức về bệnh lúa',
         'Chức năng đang trong gia đoạn thử nghiệm',
         'Chỉ có thể trả lời các câu hỏi liên quan đến bệnh lúa'
         ]
     st.write(intro)
 
-    # session state
-    if 'generated' not in st.session_state:
-        st.session_state['generated'] = ["Xin chào, tôi là RDPchat, tôi có thể giúp gì cho bạn?"]
-    if 'past' not in st.session_state:
-        st.session_state['past'] = ['Xin chào!']
+    inp = st.st.text_area()
 
-    # input
-    colored_header(label='', description='', color_name='blue-30')
-    response_container = st.container()
-    input_container = st.container()
+    model = tflearn.DNN()
+    model.load("./chatbot_model/model.tflearn")
+    
+    if inp is not None:
+        try:
+            results = model.predict([bag_of_words(inp, words)])[0]
+            results_index = np.argmax(results)
+            tag = labels[results_index]
 
-    with input_container:
-        user_input = get_text()
+            if results[results_index] > 0.5:
+                for tg in data["intents"]:
+                    if tg['tag'] == tag:
+                        responses = tg['responses:']
 
-    with response_container:
-        if user_input:
-            response = generate_response(user_input)
-            st.session_state.past.append(user_input)
-            st.session_state.generated.append(response)
+                st.write(random.choice(responses))
         
-        if st.session_state['generated']:
-            for i in range(len(st.session_state['generated'])):
-                message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
-                message(st.session_state['generated'][i], key=str(i))
+            else:
+                st.write("Tôi không hiểu câu hỏi, hãy thử hỏi câu hỏi khác")
+        
+        except:
+            pass
+
     
 
 
