@@ -325,7 +325,6 @@ with tab2:
     """)
     st.write('[Giới thiệu:]')
     intro = [
-        'RdpChat là một AI chatbot được tạo ra để hỗ trợ người nông dân về các kiến thức về bệnh lúa',
         'Chức năng đang trong gia đoạn thử nghiệm',
         'Chỉ có thể trả lời các câu hỏi liên quan đến bệnh lúa'
         ]

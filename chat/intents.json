@@ -12,7 +12,7 @@
     {"tag": "info",
     "patterns": ["Bạn là ai?", "Bác Sĩ Lúa", "Bác Sĩ Lúa là gì", "Bác Sĩ Lúa có chính xác không?", "Cách sử dụng Bác Sĩ Lúa"],
     "responses": ["Đây là Bác Sĩ Lúa, một phần mềm trí tuệ nhân tạo có thể dự đoán bênh lúa dựa trên hình ảnh", 
-                    "Bác Sĩ Lúa là một phần mềm trí tuệ nhân tạo có thể dự đoán bênh lúa dựa trên hình ảnh",
+                    "Bác Sĩ Lúa là một phần mềm trí tuệ nhân tạo có thể dự đoán bệnh lúa dựa trên hình ảnh",
                      "Bác Sĩ Lúa là một phần mềm có thể dự đoán bênh lúa với độ chính xác 97%", 
                      "Bác Sĩ Lúa là một phần mềm trí tuệ nhân tạo có thể dự đoán bênh lúa dựa trên hình ảnh. Để chẩn đoán bệnh lúa, hãy nhấn \"Browse files\" và chọn ảnh"],
     "context_set": ""
