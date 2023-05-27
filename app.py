@@ -338,9 +338,9 @@ with tab2:
         st.session_state['past'] = ['Xin chào!']
 
     # input
-    input_container = st.container()
     colored_header(label='', description='', color_name='blue-30')
     response_container = st.container()
+    input_container = st.container()
 
     with input_container:
         user_input = get_text()
