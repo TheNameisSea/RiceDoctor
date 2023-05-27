@@ -80,7 +80,8 @@ id2label = {0: 'Bạc lá',
 with open('./chat/intents.json', 'r') as json_data:
     intents = json.load(json_data)
 
-info = json.load("./info.json")
+with open('./info.json', 'r') as diseases_info:
+    info = json.load(diseases_info)
 
 # Params
 params = {
