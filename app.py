@@ -20,7 +20,6 @@ import gc
 import cv2
 from PIL import Image
 import glob
-import random
 import json 
 gc.enable()
 pd.set_option('display.max_columns', None)
@@ -36,8 +35,7 @@ import torchvision
 import timm
 import torch.nn as nn
 import torch.nn.functional as F
-from model import NeuralNet
-from nltk_utils import bag_of_words, tokenize
+from hugchat import hugchat
 
 # UI
 import streamlit as st
@@ -176,27 +174,8 @@ def get_text():
     input_text = st.text_input("You: ", "", key="input")
     return input_text
 
-def generate_response(msg):
-    response = "Xin lỗi, tôi không hiểu câu hỏi."
-
-    sentence = tokenize(msg)
-    X = bag_of_words(sentence, all_words)
-    X = X.reshape(1, X.shape[0])
-    X = torch.from_numpy(X).to(device)
-
-    output = chat_model(X)
-    _, predicted = torch.max(output, dim=1)
-
-    tag = tags[predicted.item()]
-
-    probs = torch.softmax(output, dim=1)
-    prob = probs[0][predicted.item()]
-    if prob.item() > 0.75:
-        for intent in intents['intents']:
-            if tag == intent["tag"]:
-                response = random.choice(intent['responses'])
-                return response
-    
+def generate_response(prompt, chatbot):
+    response = chatbot.chat(prompt)
     return response
 
 @st.cache_data
@@ -319,6 +298,8 @@ with tab1:
             pass
 
 with tab2:
+    chatbot = hugchat.ChatBot()
+
     st.write("""
     # RdpChat
     Chuyên gia về bệnh lúa
@@ -346,7 +327,7 @@ with tab2:
 
     with response_container:
         if user_input:
-            response = generate_response(user_input)
+            response = generate_response(user_input, chatbot)
             st.session_state.past.append(user_input)
             st.session_state.generated.append(response)
         
