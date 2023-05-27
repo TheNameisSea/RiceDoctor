@@ -41,6 +41,9 @@ from nltk_utils import bag_of_words, tokenize
 
 # UI
 import streamlit as st
+from streamlit_chat import message
+from streamlit_extras.colored_header import colored_header
+from streamlit_extras.add_vertical_space import add_vertical_space
 
 # Seeds
 RANDOM_SEED = 42
@@ -82,6 +85,9 @@ with open('./chat/intents.json', 'r') as json_data:
 
 with open('./info.json', 'r') as diseases_info:
     info = json.load(diseases_info)
+
+chat_file = "./chat/chatbot_data.pth"
+chatbot_data = torch.load(chat_file)
 
 # Params
 params = {
@@ -131,7 +137,7 @@ class PaddyDataset(Dataset):
         return image
 
 #_____Deep Learning_____#
-# Neural Net
+# PaddyNet
 class PaddyNet(nn.Module):
     def __init__(self, model_name=params['model'], out_features=params['out_features'], inp_channels=params['inp_channels'],
                  pretrained=params['pretrained']):
@@ -156,7 +162,43 @@ class PaddyNet(nn.Module):
         output = self.fc(x)
         return output
     
+# Chatbot
+all_words = chatbot_data['all_words']
+tags = chatbot_data['tags']
+model_state = chatbot_data["model_state"]
+
+chat_model = NeuralNet(input_size=chatbot_data["input_size"], hidden_size=chatbot_data["hidden_size"], output_size=chatbot_data["output_size"]).to(device)
+chat_model.load_state_dict(model_state)
+chat_model.eval()
+
 # Utils
+def get_text():
+    input_text = st.text_input("You: ", "", key="input")
+    return input_text
+
+def generate_response(msg):
+    response = "Xin lỗi, tôi không hiểu câu hỏi."
+
+    sentence = tokenize(msg)
+    X = bag_of_words(sentence, all_words)
+    X = X.reshape(1, X.shape[0])
+    X = torch.from_numpy(X).to(device)
+
+    output = model(X)
+    _, predicted = torch.max(output, dim=1)
+
+    tag = tags[predicted.item()]
+
+    probs = torch.softmax(output, dim=1)
+    prob = probs[0][predicted.item()]
+    if prob.item() > 0.5:
+        for intent in intents['intents']:
+            if tag == intent["tag"]:
+                response = random.choice(intent['responses'])
+                return response
+    
+    return response
+
 @st.cache_data
 def load_image(image_file):
     img = Image.open(image_file)
@@ -289,6 +331,30 @@ with tab2:
         ]
     st.write(intro)
 
+    # session state
+    if 'generated' not in st.session_state:
+        st.session_state['generated'] = ["Xin chào, tôi là RDPchat, tôi có thể giúp gì cho bạn?"]
+    if 'past' not in st.session_state:
+        st.session_state['past'] = ['Xin chào!']
+
+    # input
+    input_container = st.container()
+    colored_header(label='', description='', color_name='blue-30')
+    response_container = st.container()
+
+    with input_container:
+        user_input = get_text()
+
+    with response_container:
+        if user_input:
+            response = generate_response(user_input)
+            st.session_state.past.append(user_input)
+            st.session_state.generated.append(response)
+        
+        if st.session_state['generated']:
+            for i in range(len(st.session_state['generated'])):
+                message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
+                message(st.session_state['generated'][i], key=str(i))
     
 
 
