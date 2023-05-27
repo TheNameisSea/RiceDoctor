@@ -184,7 +184,7 @@ def generate_response(msg):
     X = X.reshape(1, X.shape[0])
     X = torch.from_numpy(X).to(device)
 
-    output = model(X)
+    output = chat_model(X)
     _, predicted = torch.max(output, dim=1)
 
     tag = tags[predicted.item()]
