@@ -193,7 +193,7 @@ st.set_page_config(page_title="Rice Disease Classification", page_icon="🔬", l
 # Page Title
 st.sidebar.header('Chọn chế độ:')
 st.sidebar.write(['Chẩn đoán bệnh: Chẩn đoán bệnh lúa dựa trên hình ảnh', 'Hỏi đáp: Hỗ trợ kiến thức về lúa'])
-mode = st.radio(
+mode = st.sidebar.radio(
     "Chọn chế độ",
     ('Chẩn đoán', 'Hỏi đáp'))
 
