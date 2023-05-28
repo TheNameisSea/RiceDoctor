@@ -175,11 +175,10 @@ class PaddyNet(nn.Module):
 # Utils
 def get_text():
     input_text = st.text_input("You: ", "", key="input")
-    inp = translator.translate(input_text, dest="en")
-    return inp.text
+    return input_text
 
 def generate_response(prompt):
-    response = chatbot.chat(prompt)
+    response = chatbot.chat(translator.translate(prompt, dest="en").text)
     res = translator.translate(response, dest="vi")
     return res.text
 
