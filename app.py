@@ -161,13 +161,13 @@ class PaddyNet(nn.Module):
         return output
     
 # Chatbot
-all_words = chatbot_data['all_words']
-tags = chatbot_data['tags']
-model_state = chatbot_data["model_state"]
+# all_words = chatbot_data['all_words']
+# tags = chatbot_data['tags']
+# model_state = chatbot_data["model_state"]
 
-chat_model = NeuralNet(input_size=chatbot_data["input_size"], hidden_size=chatbot_data["hidden_size"], num_classes=chatbot_data["output_size"]).to(device)
-chat_model.load_state_dict(model_state)
-chat_model.eval()
+# chat_model = NeuralNet(input_size=chatbot_data["input_size"], hidden_size=chatbot_data["hidden_size"], num_classes=chatbot_data["output_size"]).to(device)
+# chat_model.load_state_dict(model_state)
+# chat_model.eval()
 
 # Utils
 def get_text():
