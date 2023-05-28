@@ -312,8 +312,8 @@ if mode == "Hỏi đáp":
     """)
     st.write('[Giới thiệu:]')
     intro = [
-        'Chức năng đang trong gia đoạn thử nghiệm',
-        'Chỉ có thể trả lời các câu hỏi liên quan đến bệnh lúa'
+        'AI chatbot hỗ trợ các kiến thức về lúa',
+        'Chức năng đang trong giai đoạn thử nghiệm'
         ]
     st.write(intro)
 
