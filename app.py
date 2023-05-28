@@ -21,6 +21,7 @@ import cv2
 from PIL import Image
 import glob
 import json 
+from googletrans import Translator
 gc.enable()
 pd.set_option('display.max_columns', None)
 
@@ -172,10 +173,12 @@ class PaddyNet(nn.Module):
 # Utils
 def get_text():
     input_text = st.text_input("You: ", "", key="input")
+    input_text = translator.translate(input_text, dest="en").text
     return input_text
 
 def generate_response(prompt, chatbot):
     response = chatbot.chat(prompt)
+    response = translator.translate(response, dest="vi").text
     return response
 
 @st.cache_data
@@ -299,6 +302,7 @@ with tab1:
 
 with tab2:
     chatbot = hugchat.ChatBot(cookie_path="./chat/cookies.json")
+    translator = Translator()
 
     st.write("""
     # RdpChat
