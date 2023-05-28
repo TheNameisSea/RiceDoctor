@@ -298,7 +298,7 @@ with tab1:
             pass
 
 with tab2:
-    chatbot = hugchat.ChatBot()
+    chatbot = hugchat.ChatBot(cookie_path="./chat/cookies.json")
 
     st.write("""
     # RdpChat
