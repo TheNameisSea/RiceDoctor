@@ -191,9 +191,13 @@ def load_image(image_file):
 st.set_page_config(page_title="Rice Disease Classification", page_icon="🔬", layout="centered", initial_sidebar_state="expanded", menu_items=None) 
 
 # Page Title
-tab1, tab2 = st.tabs(["Chẩn đoán", "RdpChat"])
+st.sidebar.header('Chọn chế độ:')
+st.sidebar.write(['Chẩn đoán bệnh: Chẩn đoán bệnh lúa dựa trên hình ảnh', 'Hỏi đáp: Hỗ trợ kiến thức về lúa'])
+mode = st.radio(
+    "Chọn chế độ",
+    ('Chẩn đoán', 'Hỏi đáp'))
 
-with tab1:
+if mode == "Chẩn đoán":
     st.write("""
     # Bác Sĩ Lúa
     Chẩn đoán bệnh lúa dựa trên hình ảnh 
@@ -206,8 +210,7 @@ with tab1:
     ]
     st.write(luu_y)
             
-    st.sidebar.header('Tải ảnh lên để bắt đầu chẩn đoán')
-    uploaded_files = st.sidebar.file_uploader("Tải ảnh", accept_multiple_files=True)
+    uploaded_files = st.file_uploader("Tải ảnh", accept_multiple_files=True)
 
     res_col, img_col = st.columns([4, 2])
 
@@ -301,7 +304,7 @@ with tab1:
         except:
             pass
 
-with tab2:
+if mode == "Hỏi đáp":
 
     st.write("""
     # RdpChat
