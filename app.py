@@ -173,13 +173,13 @@ class PaddyNet(nn.Module):
 # Utils
 def get_text():
     input_text = st.text_input("You: ", "", key="input")
-    input_text = translator.translate(input_text, dest="en").text
-    return input_text
+    inp = translator.translate(input_text, dest="en")
+    return inp.text
 
 def generate_response(prompt, chatbot):
     response = chatbot.chat(prompt)
-    response = translator.translate(response, dest="vi").text
-    return response
+    res = translator.translate(response, dest="vi")
+    return res.text
 
 @st.cache_data
 def load_image(image_file):
