@@ -22,6 +22,7 @@ from PIL import Image
 import glob
 import json 
 from googletrans import Translator
+translator = Translator()
 gc.enable()
 pd.set_option('display.max_columns', None)
 
@@ -37,6 +38,7 @@ import timm
 import torch.nn as nn
 import torch.nn.functional as F
 from hugchat import hugchat
+chatbot = hugchat.ChatBot(cookie_path="./chat/cookies.json")
 
 # UI
 import streamlit as st
@@ -176,7 +178,7 @@ def get_text():
     inp = translator.translate(input_text, dest="en")
     return inp.text
 
-def generate_response(prompt, chatbot):
+def generate_response(prompt):
     response = chatbot.chat(prompt)
     res = translator.translate(response, dest="vi")
     return res.text
@@ -301,8 +303,6 @@ with tab1:
             pass
 
 with tab2:
-    chatbot = hugchat.ChatBot(cookie_path="./chat/cookies.json")
-    translator = Translator()
 
     st.write("""
     # RdpChat
@@ -331,7 +331,7 @@ with tab2:
 
     with response_container:
         if user_input:
-            response = generate_response(user_input, chatbot)
+            response = generate_response(user_input)
             st.session_state.past.append(user_input)
             st.session_state.generated.append(response)
         
