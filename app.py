@@ -192,10 +192,10 @@ st.set_page_config(page_title="Rice Disease Classification", page_icon="🔬", l
 
 # Page Title
 st.sidebar.header('Chọn chế độ:')
-st.sidebar.write(['Chẩn đoán bệnh: Chẩn đoán bệnh lúa dựa trên hình ảnh', 'Hỏi đáp: Hỗ trợ kiến thức về lúa'])
+st.sidebar.write(['Chẩn đoán bệnh: Chẩn đoán bệnh lúa dựa trên hình ảnh', 'RDPchat: Hỗ trợ kiến thức về lúa'])
 mode = st.sidebar.radio(
     "Chọn chế độ",
-    ('Chẩn đoán', 'Hỏi đáp'))
+    ('Chẩn đoán', 'RDPchat'))
 
 if mode == "Chẩn đoán":
     st.write("""
@@ -305,15 +305,15 @@ if mode == "Chẩn đoán":
         except:
             pass
 
-if mode == "Hỏi đáp":
+if mode == "RDPchat":
 
     st.write("""
     # RdpChat
-    Chuyên gia về bệnh lúa
+    Hỗ trợ kiến thức về bệnh lúa
     """)
     st.write('[Giới thiệu:]')
     intro = [
-        'AI chatbot hỗ trợ các kiến thức về lúa',
+        'Chatbot hỗ trợ các kiến thức về lúa',
         'Chức năng đang trong giai đoạn thử nghiệm'
         ]
     st.write(intro)
