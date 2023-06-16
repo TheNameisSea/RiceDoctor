@@ -206,7 +206,8 @@ if mode == "Chẩn đoán":
     luu_y = [
         'Sản phẩm chỉ sử dụng được cho lúa, xin vui lòng không nhập ảnh của các vật khác vào app',
         'Nhà phát triển không đảm bảo độ chính xác của dự đoán cho tất cả các dự đoán dựa trên ảnh của các giống cây ngoài lúa',
-        'Chỉ có tác dụng với ảnh chụp từ điện thoại (tỉ lệ 4:3, độ phân giải khuyến khích: 1440x1080)'
+        'Tác dụng tốt nhất với ảnh chụp từ điện thoại (tỉ lệ 4:3, độ phân giải khuyến khích: 1440x1080)',
+        'Mỗi chẩn đoán của phần mềm đều chỉ áp dụng cho những bông lúa có mặt trong hình ảnh,\nkhuyến khích sử dụng nhiều ảnh để có kết quả tốt nhất.'
     ]
     st.write(luu_y)
             
